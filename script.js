@@ -1,5 +1,5 @@
 /* MoodReel — TMDb Edition */
-const API_KEY = "YOUR_TMDB_API_KEY_HERE"; // Get free key at themoviedb.org/settings/api
+const API_KEY = "42444144e5141a878987d8025435f709"; // Get free key at themoviedb.org/settings/api
 const API = "https://api.themoviedb.org/3";
 const IMG = "https://image.tmdb.org/t/p/w500";
 const FALLBACK = "data:image/svg+xml," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="500" height="750"><rect width="100%" height="100%" fill="#1e293b"/><text x="50%" y="50%" fill="#64748b" font-family="monospace" font-size="26" text-anchor="middle">NO POSTER</text></svg>');
