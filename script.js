@@ -1,174 +1,82 @@
-/* MoodReel — mood & vibe movie picker · OMDb API + localStorage watchlist */
-const API_KEY = "https://www.omdbapi.com/?i=tt3896198&apikey=f67e6bec"; // free key: https://www.omdbapi.com/apikey.aspx
-const API = "https://www.omdbapi.com/";
-const FALLBACK = "data:image/svg+xml," + encodeURIComponent(
-  '<svg xmlns="http://www.w3.org/2000/svg" width="500" height="750"><rect width="100%" height="100%" fill="#1e293b"/><text x="50%" y="50%" fill="#64748b" font-family="monospace" font-size="26" text-anchor="middle">NO POSTER</text></svg>'
-);
-const VIBES = {
-  action: { label: "Action",       keys: ["mission", "hero", "war"] },
-  fun:    { label: "Fun / Light",  keys: ["comedy", "love", "party"] },
-  mind:   { label: "Mind-Bending", keys: ["space", "time", "matrix"] },
-  chill:  { label: "Chilling",     keys: ["ghost", "haunt", "nightmare"] },
-};
-
-const $ = (s) => document.querySelector(s);
-const grid = $("#grid"), statusEl = $("#status"), sectionTitle = $("#section-title");
-const dialog = $("#modal"), wlToggle = $("#wl-toggle"), wlCount = $("#wl-count");
-const cache = new Map();
-const state = { vibe: "action", view: "discover" };
-let current = null;
-
-const omdb = async (params) => (await fetch(`${API}?apikey=${API_KEY}${params}`)).json();
-const posterOf = (m) => (m.Poster && m.Poster !== "N/A" ? m.Poster : FALLBACK);
-
-/* ---------- Watchlist helpers (localStorage) ---------- */
-const getWL = () => JSON.parse(localStorage.getItem("moodreel") || "[]");
-const inWL = (id) => getWL().some((m) => m.imdbID === id);
-const slim = (m) => ({ imdbID: m.imdbID, Title: m.Title, Year: m.Year, Poster: m.Poster });
-const syncCount = () => (wlCount.textContent = getWL().length);
-
-function toggleWL(movie) {
-  const list = inWL(movie.imdbID) ? getWL().filter((m) => m.imdbID !== movie.imdbID) : [...getWL(), slim(movie)];
-  localStorage.setItem("moodreel", JSON.stringify(list));
-  syncCount();
-  if (state.view === "watchlist") return showWatchlist();
-  grid.querySelectorAll(`.card[data-id="${movie.imdbID}"] [data-wl]`).forEach((b) => updateBtn(b, movie.imdbID));
-  if (dialog.open && current?.imdbID === movie.imdbID) updateBtn($("#m-save"), movie.imdbID);
+:root {
+  --bg: #0f172a; --panel: #16213c; --card: #1e293b; --line: #2c3a55;
+  --ink: #e2e8f0; --mut: #8fa3bf;
+  --amber: #fbbf24; --coral: #fb7185; --cyan: #22d3ee; --lime: #a3e635;
 }
+* { margin: 0; box-sizing: border-box; }
+::selection { background: var(--amber); color: #0f172a; }
+:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
 
-/* ---------- Rendering ---------- */
-function updateBtn(btn, id) {
-  const saved = inWL(id);
-  btn.classList.toggle("saved", saved || state.view === "watchlist");
-  btn.textContent = state.view === "watchlist" ? "✕ Remove" : saved ? "✓ Saved" : "+ Watchlist";
+body {
+  font-family: "Outfit", system-ui, sans-serif; color: var(--ink); min-height: 100vh;
+  background:
+    radial-gradient(55rem 26rem at 90% -8%, rgba(34, 211, 238, .13), transparent 60%),
+    radial-gradient(46rem 24rem at -8% 25%, rgba(251, 191, 36, .11), transparent 60%),
+    radial-gradient(40rem 22rem at 50% 110%, rgba(251, 113, 133, .09), transparent 60%),
+    var(--bg);
+  background-attachment: fixed;
 }
+header, main, footer { position: relative; max-width: 1180px; margin-inline: auto; padding-inline: clamp(1rem, 4vw, 2.5rem); }
 
-function cardHTML(m, i) {
-  return `<article class="card" data-id="${m.imdbID}" style="animation-delay:${i * 45}ms">
-    <img src="${posterOf(m)}" alt="" loading="lazy" onerror="this.onerror=null;this.src='${FALLBACK}'">
-    <span class="rating" data-rating>★ …</span>
-    <div class="card-body">
-      <h3>${m.Title}</h3>
-      <p class="year">${m.Year}</p>
-      <button class="wl-btn" data-wl>+ Watchlist</button>
-    </div>
-  </article>`;
-}
+header { padding-top: 2rem; }
+.masthead { display: flex; flex-wrap: wrap; align-items: baseline; gap: .4rem 1.2rem; }
+h1 { font-family: "Bebas Neue", sans-serif; font-size: clamp(3rem, 7vw, 4.6rem); line-height: .95; letter-spacing: .04em; }
+h1 span { color: var(--amber); text-shadow: 0 0 26px rgba(251, 191, 36, .45); }
+.tag { color: var(--mut); font-size: .85rem; letter-spacing: .18em; text-transform: uppercase; }
 
-function paintCards(movies) {
-  movies.forEach((m) => cache.set(m.imdbID, m));
-  grid.innerHTML = movies.length ? movies.map(cardHTML).join("")
-    : '<p class="empty">Nothing here yet — hit "+ Watchlist" on any movie. 🎬</p>';
-  grid.querySelectorAll("[data-wl]").forEach((b) => updateBtn(b, b.closest(".card").dataset.id));
-  if (movies.length) movies.forEach((m) => hydrateRating(m.imdbID));
-}
+.ticker { overflow: hidden; border-block: 1px solid var(--line); margin: 1.1rem 0 1.4rem; }
+.ticker div { display: flex; width: max-content; animation: scroll 24s linear infinite; }
+.ticker span { font-family: "Bebas Neue"; font-size: 1.05rem; letter-spacing: .35em; color: var(--mut); padding: .35rem 0; white-space: nowrap; }
+@keyframes scroll { to { transform: translateX(-50%); } }
 
-async function hydrateRating(id) {
-  const badge = grid.querySelector(`.card[data-id="${id}"] [data-rating]`);
-  if (!badge) return;
-  if (cache.get(id)?.imdbRating) { badge.textContent = "★ " + cache.get(id).imdbRating; return; }
-  try {
-    const d = await omdb("&i=" + id);
-    if (d.Response !== "True") throw 0;
-    cache.set(id, { ...cache.get(id), ...d });
-    badge.textContent = "★ " + d.imdbRating;
-  } catch { badge.textContent = "★ –"; }
-}
+#vibes { display: flex; flex-wrap: wrap; gap: .6rem; margin-bottom: 1rem; }
+.vibe { font: 600 .92rem "Outfit"; color: var(--ink); cursor: pointer; transition: .2s; background: var(--card); border: 1px solid var(--line); border-radius: 999px; padding: .5rem 1.05rem; }
+.vibe:hover { transform: translateY(-2px); border-color: var(--amber); }
+.vibe.active { background: var(--amber); border-color: var(--amber); color: #0f172a; box-shadow: 0 0 18px rgba(251, 191, 36, .35); }
+.vibe[data-genre="35"].active  { background: var(--lime);  border-color: var(--lime);  box-shadow: 0 0 18px rgba(163, 230, 53, .35); }
+.vibe[data-genre="878"].active { background: var(--cyan);  border-color: var(--cyan);  box-shadow: 0 0 18px rgba(34, 211, 238, .35); }
+.vibe[data-genre="27"].active  { background: var(--coral); border-color: var(--coral); box-shadow: 0 0 18px rgba(251, 113, 133, .35); }
 
-async function showDiscover() {
-  state.view = "discover";
-  wlToggle.classList.remove("active");
-  const vibe = VIBES[state.vibe];
-  const kw = vibe.keys[Math.floor(Math.random() * vibe.keys.length)];
-  const page = 1 + Math.floor(Math.random() * 3);
-  sectionTitle.textContent = "Tonight's vibe: " + vibe.label;
-  statusEl.textContent = `Scanning the reels for "${kw}"…`;
-  grid.innerHTML = "";
-  try {
-    const data = await omdb(`&s=${encodeURIComponent(kw)}&type=movie&page=${page}`);
-    if (data.Response !== "True") throw data.Error;
-    paintCards(data.Search.filter((m) => m.Type === "movie"));
-    statusEl.textContent = `Matched "${kw}" · page ${page} of ${Math.ceil(data.totalResults / 10)}`;
-  } catch (err) {
-    statusEl.textContent = API_KEY.includes("YOUR_")
-      ? "⚠ Paste your free OMDb API key at the top of script.js"
-      : "⚠ " + (err || "Could not reach OMDb — try again.");
-  }
-}
+.controls { display: flex; flex-wrap: wrap; gap: .6rem; }
+.btn { font: 600 .95rem "Outfit"; cursor: pointer; transition: .2s; color: var(--ink); background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: .65rem 1.2rem; }
+.btn:hover { transform: translateY(-2px); }
+.btn.primary { background: var(--amber); border-color: var(--amber); color: #0f172a; }
+.btn.primary:hover { box-shadow: 0 6px 22px rgba(251, 191, 36, .4); }
+.btn.ghost:hover { border-color: var(--cyan); color: var(--cyan); }
+#wl-toggle.active { border-color: var(--coral); color: var(--coral); }
+#wl-count { background: var(--coral); color: #0f172a; border-radius: 999px; padding: .05rem .5rem; font-size: .8rem; }
 
-function showWatchlist() {
-  state.view = "watchlist";
-  wlToggle.classList.add("active");
-  sectionTitle.textContent = "Your Watchlist";
-  statusEl.textContent = "";
-  paintCards(getWL());
-}
+main { padding-bottom: 3rem; min-height: 55vh; }
+#section-title { font-family: "Bebas Neue"; font-size: clamp(1.6rem, 3vw, 2.2rem); letter-spacing: .06em; margin: 1.6rem 0 1.2rem; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 1.2rem; }
+.card { position: relative; background: var(--card); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; cursor: pointer; animation: pop .45s both; transition: transform .25s, border-color .25s, box-shadow .25s; }
+@keyframes pop { from { opacity: 0; transform: translateY(14px) scale(.97); } }
+.card:hover { transform: translateY(-6px); border-color: var(--amber); box-shadow: 0 14px 30px rgba(0, 0, 0, .45); }
+.card img { display: block; width: 100%; aspect-ratio: 2 / 3; object-fit: cover; transition: transform .35s; }
+.card:hover img { transform: scale(1.04); }
+.rating { position: absolute; top: .55rem; right: .55rem; font-size: .8rem; font-weight: 700; background: rgba(15, 23, 42, .85); color: var(--amber); border: 1px solid var(--line); padding: .15rem .5rem; border-radius: 999px; }
+.card-body { padding: .8rem .9rem 1rem; }
+.card-body h3 { font-size: 1rem; line-height: 1.25; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.year { color: var(--mut); font-size: .85rem; margin: .25rem 0 .7rem; }
+.wl-btn { width: 100%; font: 600 .85rem "Outfit"; padding: .5rem; cursor: pointer; transition: .2s; border: 1px dashed var(--line); border-radius: 8px; background: transparent; color: var(--mut); }
+.wl-btn:hover { border-style: solid; border-color: var(--lime); color: var(--lime); }
+.wl-btn.saved { border-style: solid; border-color: var(--lime); color: var(--lime); background: rgba(163, 230, 53, .08); }
+.status, .empty { color: var(--mut); margin-top: 1.5rem; font-size: .95rem; }
+.empty { grid-column: 1 / -1; border: 1px dashed var(--line); border-radius: 12px; padding: 2rem; text-align: center; }
 
-/* ---------- Modal + Surprise Me ---------- */
-function openModal(m) {
-  current = m;
-  $("#m-poster").src = posterOf(m);
-  $("#m-title").textContent = m.Title;
-  $("#m-meta").textContent = (m.Year || "TBA") + " · ★ …";
-  $("#m-overview").textContent = m.Plot || "Rolling the details…";
-  updateBtn($("#m-save"), m.imdbID);
-  dialog.showModal();
-  enrichModal(m.imdbID);
-}
+dialog { border: 1px solid var(--line); border-radius: 16px; background: var(--panel); color: var(--ink); padding: 0; width: min(760px, 92vw); max-height: 88vh; overflow: hidden; }
+dialog::backdrop { background: rgba(2, 6, 23, .75); backdrop-filter: blur(4px); }
+dialog[open] { animation: pop .3s both; }
+.modal-grid { display: grid; grid-template-columns: 220px 1fr; }
+.modal-grid img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.modal-info { display: flex; flex-direction: column; gap: .7rem; padding: 1.4rem 1.5rem; overflow-y: auto; position: relative; }
+#m-close { position: absolute; top: .6rem; right: .6rem; padding: .35rem .7rem; font-size: .8rem; background: rgba(15, 23, 42, .8); z-index: 2; }
+#m-title { font-family: "Bebas Neue"; font-size: 2rem; letter-spacing: .04em; line-height: 1; padding-right: 3rem;}
+#m-meta { color: var(--amber); font-weight: 600; font-size: .9rem; letter-spacing: .06em; }
+#m-overview { color: var(--mut); line-height: 1.6; font-size: .95rem; }
+#m-save { margin-top: auto; align-self: flex-start; }
 
-async function enrichModal(id) {
-  try {
-    const d = cache.get(id)?.Plot ? cache.get(id) : await omdb("&i=" + id + "&plot=full");
-    if (!d || d.Response !== "True") throw 0;
-    cache.set(id, { ...cache.get(id), ...d });
-    if (current?.imdbID !== id || !dialog.open) return;
-    $("#m-meta").textContent = `${d.Year} · ★ ${d.imdbRating} / 10 · ${d.Genre}`;
-    $("#m-overview").textContent = !d.Plot || d.Plot === "N/A" ? "No plot on file for this one yet." : d.Plot;
-    const badge = grid.querySelector(`.card[data-id="${id}"] [data-rating]`);
-    if (badge) badge.textContent = "★ " + d.imdbRating;
-  } catch { $("#m-overview").textContent = "Could not load details for this one."; }
-}
-
-async function surprise() {
-  statusEl.textContent = "🎲 Rolling the dice…";
-  try {
-    const { keys } = VIBES[state.vibe];
-    const kw = keys[Math.floor(Math.random() * keys.length)];
-    const page = 1 + Math.floor(Math.random() * 5);
-    const data = await omdb(`&s=${encodeURIComponent(kw)}&type=movie&page=${page}`);
-    if (data.Response !== "True") throw data.Error;
-    const pick = data.Search[Math.floor(Math.random() * data.Search.length)];
-    if (!pick) throw "No results on that roll";
-    openModal(pick);
-    statusEl.textContent = "";
-  } catch (err) {
-    statusEl.textContent = "⚠ The dice slipped — " + (err || "try again.");
-  }
-}
-
-/* ---------- Events ---------- */
-$("#vibes").addEventListener("click", (e) => {
-  const btn = e.target.closest(".vibe");
-  if (!btn) return;
-  document.querySelectorAll(".vibe").forEach((b) => b.classList.remove("active"));
-  btn.classList.add("active");
-  state.vibe = btn.dataset.vibe;
-  showDiscover();
-});
-$("#find").addEventListener("click", showDiscover);
-$("#surprise").addEventListener("click", surprise);
-wlToggle.addEventListener("click", () => (state.view === "watchlist" ? showDiscover() : showWatchlist()));
-$("#m-close").addEventListener("click", () => dialog.close());
-$("#m-save").addEventListener("click", () => current && toggleWL(current));
-dialog.addEventListener("click", (e) => e.target === dialog && dialog.close());
-grid.addEventListener("click", (e) => {
-  const card = e.target.closest(".card");
-  if (!card) return;
-  const movie = cache.get(card.dataset.id);
-  if (!movie) return;
-  if (e.target.closest("[data-wl]")) return toggleWL(movie);
-  openModal(movie);
-});
-
-syncCount();
-showDiscover();
+footer { color: var(--mut); font-size: .85rem; padding-block: 1.5rem; text-align: center; border-top: 1px solid var(--line); }
+footer a { color: var(--cyan); text-decoration: none; }
+@media (max-width: 620px) { .modal-grid { grid-template-columns: 1fr; } .modal-grid img { max-height: 240px; } }
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
