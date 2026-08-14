@@ -1,5 +1,5 @@
 /* MoodReel — mood & vibe movie picker · OMDb API + localStorage watchlist */
-const API_KEY = " http://www.omdbapi.com/?i=tt3896198&apikey=f67e6bec"; // free key: https://www.omdbapi.com/apikey.aspx
+const API_KEY = "https://www.omdbapi.com/?i=tt3896198&apikey=f67e6bec"; // free key: https://www.omdbapi.com/apikey.aspx
 const API = "https://www.omdbapi.com/";
 const FALLBACK = "data:image/svg+xml," + encodeURIComponent(
   '<svg xmlns="http://www.w3.org/2000/svg" width="500" height="750"><rect width="100%" height="100%" fill="#1e293b"/><text x="50%" y="50%" fill="#64748b" font-family="monospace" font-size="26" text-anchor="middle">NO POSTER</text></svg>'
