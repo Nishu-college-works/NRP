@@ -16,13 +16,8 @@ body {
     var(--bg);
   background-attachment: fixed;
 }
-body::before { /* film grain */
-  content: ""; position: fixed; inset: 0; z-index: 0; pointer-events: none;
-  background: repeating-linear-gradient(0deg, rgba(255, 255, 255, .03) 0 1px, transparent 1px 3px);
-}
-header, main, footer { position: relative; z-index: 1; max-width: 1180px; margin-inline: auto; padding-inline: clamp(1rem, 4vw, 2.5rem); }
+header, main, footer { position: relative; max-width: 1180px; margin-inline: auto; padding-inline: clamp(1rem, 4vw, 2.5rem); }
 
-/* ---- Header ---- */
 header { padding-top: 2rem; }
 .masthead { display: flex; flex-wrap: wrap; align-items: baseline; gap: .4rem 1.2rem; }
 h1 { font-family: "Bebas Neue", sans-serif; font-size: clamp(3rem, 7vw, 4.6rem); line-height: .95; letter-spacing: .04em; }
@@ -35,21 +30,15 @@ h1 span { color: var(--amber); text-shadow: 0 0 26px rgba(251, 191, 36, .45); }
 @keyframes scroll { to { transform: translateX(-50%); } }
 
 #vibes { display: flex; flex-wrap: wrap; gap: .6rem; margin-bottom: 1rem; }
-.vibe {
-  font: 600 .92rem "Outfit"; color: var(--ink); cursor: pointer; transition: .2s;
-  background: var(--card); border: 1px solid var(--line); border-radius: 999px; padding: .5rem 1.05rem;
-}
+.vibe { font: 600 .92rem "Outfit"; color: var(--ink); cursor: pointer; transition: .2s; background: var(--card); border: 1px solid var(--line); border-radius: 999px; padding: .5rem 1.05rem; }
 .vibe:hover { transform: translateY(-2px); border-color: var(--amber); }
 .vibe.active { background: var(--amber); border-color: var(--amber); color: #0f172a; box-shadow: 0 0 18px rgba(251, 191, 36, .35); }
-.vibe[data-vibe="fun"].active   { background: var(--lime);  border-color: var(--lime);  box-shadow: 0 0 18px rgba(163, 230, 53, .35); }
-.vibe[data-vibe="mind"].active  { background: var(--cyan);  border-color: var(--cyan);  box-shadow: 0 0 18px rgba(34, 211, 238, .35); }
-.vibe[data-vibe="chill"].active { background: var(--coral); border-color: var(--coral); box-shadow: 0 0 18px rgba(251, 113, 133, .35); }
+.vibe[data-genre="35"].active  { background: var(--lime);  border-color: var(--lime);  box-shadow: 0 0 18px rgba(163, 230, 53, .35); }
+.vibe[data-genre="878"].active { background: var(--cyan);  border-color: var(--cyan);  box-shadow: 0 0 18px rgba(34, 211, 238, .35); }
+.vibe[data-genre="27"].active  { background: var(--coral); border-color: var(--coral); box-shadow: 0 0 18px rgba(251, 113, 133, .35); }
 
 .controls { display: flex; flex-wrap: wrap; gap: .6rem; }
-.btn {
-  font: 600 .95rem "Outfit"; cursor: pointer; transition: .2s; color: var(--ink);
-  background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: .65rem 1.2rem;
-}
+.btn { font: 600 .95rem "Outfit"; cursor: pointer; transition: .2s; color: var(--ink); background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: .65rem 1.2rem; }
 .btn:hover { transform: translateY(-2px); }
 .btn.primary { background: var(--amber); border-color: var(--amber); color: #0f172a; }
 .btn.primary:hover { box-shadow: 0 6px 22px rgba(251, 191, 36, .4); }
@@ -57,52 +46,37 @@ h1 span { color: var(--amber); text-shadow: 0 0 26px rgba(251, 191, 36, .45); }
 #wl-toggle.active { border-color: var(--coral); color: var(--coral); }
 #wl-count { background: var(--coral); color: #0f172a; border-radius: 999px; padding: .05rem .5rem; font-size: .8rem; }
 
-/* ---- Grid & cards ---- */
 main { padding-bottom: 3rem; min-height: 55vh; }
 #section-title { font-family: "Bebas Neue"; font-size: clamp(1.6rem, 3vw, 2.2rem); letter-spacing: .06em; margin: 1.6rem 0 1.2rem; }
 .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 1.2rem; }
-.card {
-  position: relative; background: var(--card); border: 1px solid var(--line); border-radius: 14px;
-  overflow: hidden; cursor: pointer; animation: pop .45s both;
-  transition: transform .25s, border-color .25s, box-shadow .25s;
-}
+.card { position: relative; background: var(--card); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; cursor: pointer; animation: pop .45s both; transition: transform .25s, border-color .25s, box-shadow .25s; }
 @keyframes pop { from { opacity: 0; transform: translateY(14px) scale(.97); } }
 .card:hover { transform: translateY(-6px); border-color: var(--amber); box-shadow: 0 14px 30px rgba(0, 0, 0, .45); }
 .card img { display: block; width: 100%; aspect-ratio: 2 / 3; object-fit: cover; transition: transform .35s; }
 .card:hover img { transform: scale(1.04); }
-.rating {
-  position: absolute; top: .55rem; right: .55rem; font-size: .8rem; font-weight: 700;
-  background: rgba(15, 23, 42, .85); color: var(--amber); border: 1px solid var(--line);
-  padding: .15rem .5rem; border-radius: 999px;
-}
+.rating { position: absolute; top: .55rem; right: .55rem; font-size: .8rem; font-weight: 700; background: rgba(15, 23, 42, .85); color: var(--amber); border: 1px solid var(--line); padding: .15rem .5rem; border-radius: 999px; }
 .card-body { padding: .8rem .9rem 1rem; }
 .card-body h3 { font-size: 1rem; line-height: 1.25; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .year { color: var(--mut); font-size: .85rem; margin: .25rem 0 .7rem; }
-.wl-btn {
-  width: 100%; font: 600 .85rem "Outfit"; padding: .5rem; cursor: pointer; transition: .2s;
-  border: 1px dashed var(--line); border-radius: 8px; background: transparent; color: var(--mut);
-}
+.wl-btn { width: 100%; font: 600 .85rem "Outfit"; padding: .5rem; cursor: pointer; transition: .2s; border: 1px dashed var(--line); border-radius: 8px; background: transparent; color: var(--mut); }
 .wl-btn:hover { border-style: solid; border-color: var(--lime); color: var(--lime); }
 .wl-btn.saved { border-style: solid; border-color: var(--lime); color: var(--lime); background: rgba(163, 230, 53, .08); }
 .status, .empty { color: var(--mut); margin-top: 1.5rem; font-size: .95rem; }
 .empty { grid-column: 1 / -1; border: 1px dashed var(--line); border-radius: 12px; padding: 2rem; text-align: center; }
 
-/* ---- Modal ---- */
 dialog { border: 1px solid var(--line); border-radius: 16px; background: var(--panel); color: var(--ink); padding: 0; width: min(760px, 92vw); max-height: 88vh; overflow: hidden; }
 dialog::backdrop { background: rgba(2, 6, 23, .75); backdrop-filter: blur(4px); }
 dialog[open] { animation: pop .3s both; }
 .modal-grid { display: grid; grid-template-columns: 220px 1fr; }
-.modal-art { position: relative; }
-.modal-art img { display: block; width: 100%; height: 100%; object-fit: cover; }
-#m-close { position: absolute; top: .6rem; right: .6rem; padding: .35rem .7rem; font-size: .8rem; background: rgba(15, 23, 42, .8); }
-.modal-info { display: flex; flex-direction: column; gap: .7rem; padding: 1.4rem 1.5rem; overflow-y: auto; }
-#m-title { font-family: "Bebas Neue"; font-size: 2rem; letter-spacing: .04em; line-height: 1; }
+.modal-grid img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.modal-info { display: flex; flex-direction: column; gap: .7rem; padding: 1.4rem 1.5rem; overflow-y: auto; position: relative; }
+#m-close { position: absolute; top: .6rem; right: .6rem; padding: .35rem .7rem; font-size: .8rem; background: rgba(15, 23, 42, .8); z-index: 2; }
+#m-title { font-family: "Bebas Neue"; font-size: 2rem; letter-spacing: .04em; line-height: 1; padding-right: 3rem;}
 #m-meta { color: var(--amber); font-weight: 600; font-size: .9rem; letter-spacing: .06em; }
 #m-overview { color: var(--mut); line-height: 1.6; font-size: .95rem; }
 #m-save { margin-top: auto; align-self: flex-start; }
 
 footer { color: var(--mut); font-size: .85rem; padding-block: 1.5rem; text-align: center; border-top: 1px solid var(--line); }
 footer a { color: var(--cyan); text-decoration: none; }
-footer a:hover { text-decoration: underline; }
-@media (max-width: 620px) { .modal-grid { grid-template-columns: 1fr; } .modal-art img { max-height: 240px; } }
+@media (max-width: 620px) { .modal-grid { grid-template-columns: 1fr; } .modal-grid img { max-height: 240px; } }
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
