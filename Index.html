@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MoodReel — Pick a Vibe, Get a Movie</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header>
+    <div class="masthead">
+      <h1>Mood<span>Reel</span></h1>
+      <p class="tag">pick a vibe · we roll the reel</p>
+    </div>
+    <div class="ticker" aria-hidden="true">
+      <div>
+        <span>ACTION ✦ FUN &amp; LIGHT ✦ MIND-BENDING ✦ CHILLING ✦ POPCORN ✦ MIDNIGHT ✦&nbsp;</span>
+        <span>ACTION ✦ FUN &amp; LIGHT ✦ MIND-BENDING ✦ CHILLING ✦ POPCORN ✦ MIDNIGHT ✦&nbsp;</span>
+      </div>
+    </div>
+    <nav id="vibes" aria-label="Mood filters">
+      <button class="vibe active" data-vibe="action">🔥 Action</button>
+      <button class="vibe" data-vibe="fun">🍿 Fun / Light</button>
+      <button class="vibe" data-vibe="mind">🌀 Mind-Bending</button>
+      <button class="vibe" data-vibe="chill">👻 Chilling</button>
+    </nav>
+    <div class="controls">
+      <button id="find" class="btn primary">▶ Find Movies</button>
+      <button id="surprise" class="btn ghost">🎲 Surprise Me!</button>
+      <button id="wl-toggle" class="btn ghost">🔖 Watchlist <span id="wl-count">0</span></button>
+    </div>
+  </header>
+
+  <main>
+    <h2 id="section-title">Tonight's vibe: Action</h2>
+    <section id="grid" class="grid" aria-live="polite"></section>
+    <p id="status" class="status" role="status"></p>
+  </main>
+
+  <dialog id="modal">
+    <div class="modal-grid">
+      <div class="modal-art">
+        <img id="m-poster" alt="" />
+        <button id="m-close" class="btn" type="button">✕</button>
+      </div>
+      <div class="modal-info">
+        <h3 id="m-title"></h3>
+        <p id="m-meta"></p>
+        <p id="m-overview"></p>
+        <button id="m-save" class="btn primary">+ Watchlist</button>
+      </div>
+    </div>
+  </dialog>
+
+  <footer>Movie data &amp; posters via <a href="https://www.omdbapi.com/" target="_blank" rel="noopener">OMDb API</a> · MoodReel 🎞</footer>
+  <script src="script.js"></script>
+</body>
+</html>
